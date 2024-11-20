@@ -1,7 +1,7 @@
 import streamlit as st
 import src.code.display as display
 
-page_name = "ETH-USD"
+page_name = "AERO-USD"
 
 fetch_args = st.session_state.ticker_args[page_name]
 

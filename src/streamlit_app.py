@@ -33,6 +33,7 @@ def run():
             (pages_folder / f"{page_name}.py").write_text(
                     file_template.format(
                         new_page_name=page_name,
+                        symbol='symbol'
                     ),
                     encoding="utf-8",
             )

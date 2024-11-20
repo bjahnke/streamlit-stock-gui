@@ -3,4 +3,4 @@ plotly
 yfinance
 pandas
 ta
-streamlit streamlit-components
+coinbase-advanced-py
