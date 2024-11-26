@@ -2,4 +2,4 @@ import streamlit as st
 import src.code.display as display
 import src.code.sidebar as sidebar
 
-sidebar.create_sidebar("AERO-USD")
+sidebar.create_sidebar("AAVE-USD")

@@ -19,7 +19,7 @@ st.title("Delete Pages")
 
 if files:
     for file in files:
-        if file != '__init__.py':
+        if file not in ['__init__.py', '_config.py']:
             file_path = os.path.join(views_dir, file)
             if st.button(f"Delete {file}", key=file):
                 delete_file(file_path)

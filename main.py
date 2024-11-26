@@ -4,4 +4,5 @@ import src.streamlit_app as streamlit_app
 # ptvsd.wait_for_attach()
 
 if __name__ == '__main__':
+
     streamlit_app.run()

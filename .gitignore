@@ -126,3 +126,5 @@ cython_debug/
 
 # Streamlit cache
 .streamlit/
+
+api_path.json

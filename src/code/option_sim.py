@@ -36,6 +36,7 @@ def main(premium, option_value, apr):
     # Calculate the break-even day
     break_even_day = calc_break_even_days(premium, option_value, apr)
     print(f"Break-even day: {break_even_day}")
+    print(f"Daily Reward: {option_value * apr / 365}")
 
     # Subtract the premium from the cumulative reward
     cumulative_reward_minus_premium = cumulative_reward - premium
@@ -150,6 +151,33 @@ class MaturedOption:
 def cost_calc(price, amount):
     return price * amount
 
+
+def break_even_series(premium, apr) -> pd.DataFrame:
+    """calc break even day over an array of optoin values from 1 to x, 
+    stopping when break even day is less than 1"""
+    i = 0
+    break_even_days = []
+    while True:
+        i += 1
+        days = calc_break_even_days(premium, i, apr)
+        break_even_days.append((i, days))
+        if days < 1:
+            break
+
+    return pd.DataFrame(break_even_days, columns=['Option Value', 'Break Even Days'])
+
+def plot_break_even_graph(premium, apr):
+    break_even_df = break_even_series(premium, apr)
+    plt.figure(figsize=(10, 6))
+    plt.plot(break_even_df['Option Value'], break_even_df['Break Even Days'], label="Break Even Days")
+    plt.title("Break Even Days vs Option Value")
+    plt.xlabel("Option Value")
+    plt.ylabel("Break Even Days")
+    plt.grid()
+    plt.legend()
+    plt.show()
+
+
 # Example: Simulating a Bull Call Spread
 if __name__ == "__main__":
     # # Define options
@@ -166,4 +194,5 @@ if __name__ == "__main__":
 
     cost = cost_calc(3100, .044766) * 2
     print('Cost:', cost)
-    main(premium=900, option_value=3000, apr=110)
+    main(premium=1000, option_value=350, apr=110)
+

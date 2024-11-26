@@ -27,9 +27,11 @@ def run():
             page_name = st.session_state.page_name
             st.session_state.ticker_args[page_name] = dict()
             st.session_state.ticker_args[page_name]["symbol"] = page_name
-            st.session_state.ticker_args[page_name]["period"] = 'max'
+            st.session_state.ticker_args[page_name]["interval"] = '1 day'
             st.session_state.ticker_args[page_name]["chart_type"] = 'Candlestick'
             st.session_state.ticker_args[page_name]["indicators"] = []
+            st.session_state.ticker_args[page_name]["bar_count"] = 365
+            st.session_state.ticker_args[page_name]["source"] = 'yfinance'
             (pages_folder / f"{page_name}.py").write_text(
                     file_template.format(
                         new_page_name=page_name,
