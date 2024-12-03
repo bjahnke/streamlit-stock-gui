@@ -7,9 +7,10 @@ from datetime import datetime, timedelta
 import pytz
 import ta
 import typing as t
-from src.utils import save_ticker_args
-import src.code.yfinance_fetch as yfinance_fetch
-from src.code.settings import source_settings, Settings, SourceOptions
+from source.utils import save_ticker_args
+import source.code.yfinance_fetch as yfinance_fetch
+from source.code.settings import source_settings, Settings, SourceOptions
+import src.floor_ceiling_regime
 
 
 ##########################################################################################
@@ -111,6 +112,32 @@ def display_ticker_data(source: SourceOptions, symbol, interval, chart_type, ind
             fig.add_trace(go.Scatter(x=x, y=data['trading_range_hi_band'], name='TR High Band'))
             fig.add_trace(go.Scatter(x=x, y=data['trading_range_23'], name='TR 23%'))
             fig.add_trace(go.Scatter(x=x, y=data['trading_range_76'], name='TR 76%'))
+        elif indicator == 'Floor/Ceiling':
+            
+            fig.add_trace(go.Scatter(x=x, y=data['Floor'], name='Floor'))
+            fig.add_trace(go.Scatter(x=x, y=data['Ceiling'], name='Ceiling'))
+        elif indicator == 'Peaks':
+            pass
+        
+        d = data.copy()
+        d = d.reset_index().rename(columns={'index': 'bar_number'})
+        tables = src.floor_ceiling_regime.fc_scale_strategy_live(d)
+        # breakpoint()
+        fig.add_trace(go.Scatter(x=x, y=tables.enhanced_price_data['rg'], name='RG', yaxis='y2', line=dict(color='white')))
+
+        fig.update_layout(
+        title=f'{symbol} {interval.upper()} Chart',
+        xaxis_title='Time',
+        yaxis_title='Price (USD)',
+        yaxis2=dict(
+            title='RG',
+            overlaying='y',
+            side='right'
+        ),
+        autosize=True,
+        height=800
+        )
+        
 
     fig.update_layout(title=f'{symbol} {interval.upper()} Chart',
                       xaxis_title='Time',

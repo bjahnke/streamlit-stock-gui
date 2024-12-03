@@ -16,7 +16,7 @@ import typing as t
 ###############################################
 ## PART 2: Creating the Dashboard App layout ##
 ###############################################
-from src.code.display import *
+from source.code.display import *
 import streamlit as st
 import plotly.graph_objects as go
 import plotly.express as px

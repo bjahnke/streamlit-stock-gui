@@ -1,8 +1,8 @@
-from src.code.settings_model import FetchConfig, FetchSettings
+from source.code.settings_model import FetchConfig, FetchSettings
 from datetime import timedelta
-from src.code.settings_model import Settings, SourceSettings
-import src.code.coinbase as cb_fetch
-import src.code.yfinance_fetch as yfinance_fetch
+from source.code.settings_model import Settings, SourceSettings
+import source.code.coinbase as cb_fetch
+import source.code.yfinance_fetch as yfinance_fetch
 
 class Interval:
     """Enum for time interval keys for consistency and avoiding typos"""

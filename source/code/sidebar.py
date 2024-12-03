@@ -1,13 +1,26 @@
 import streamlit as st
-import src.code.display as display
-import src.code.yfinance_fetch as yfinance_fetch
-from src.code.settings import source_options, source_settings
+import source.code.display as display
+import source.code.yfinance_fetch as yfinance_fetch
+from source.code.settings import source_options, source_settings
+import pandas as pd
 
 def create_sidebar(new_page_name: str):
 
     page_name = new_page_name
-
-    fetch_args = st.session_state.ticker_args[page_name]
+    if 'ticker_args' not in st.session_state:
+        st.session_state.ticker_args = pd.read_pickle('ticker_args.pkl')
+    if page_name not in st.session_state.ticker_args:
+        fetch_args = st.session_state.ticker_args
+        fetch_args = {
+            "symbol": new_page_name,
+            "interval": "1 day",
+            "chart_type": "Candlestick",
+            "indicators": [],
+            "bar_count": 300,
+            "source": "yfinance"
+        }
+    else: 
+        fetch_args = st.session_state.ticker_args[page_name]
 
     with open("new_page_template.py", "r") as file:
         file_template = file.read()

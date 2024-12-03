@@ -1,10 +1,10 @@
 import pandas as pd
 from datetime import datetime, timedelta
-import src.code.settings_model as settings_model
+import source.code.settings_model as settings_model
 from coinbase.rest import RESTClient
 from dotenv import load_dotenv
 import os
-from src.code.settings_model import FetchConfig
+from source.code.settings_model import FetchConfig
 import requests
 import json
 load_dotenv()

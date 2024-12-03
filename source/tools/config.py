@@ -29,6 +29,7 @@ def load_api_file(file_path):
     except Exception as e:
         st.error(f"Error loading API file: {e}")
 
+
 st.title("Coinbase API Configuration")
 
 file_path = st.text_input("Enter the path to your local Coinbase API file:")
@@ -36,3 +37,8 @@ file_path = st.text_input("Enter the path to your local Coinbase API file:")
 
 if st.button("Load API Key"):
     load_api_file(file_path)
+
+
+st.text_input("name")
+st.text
+

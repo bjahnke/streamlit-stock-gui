@@ -1,12 +1,13 @@
 import streamlit as st
 from pathlib import Path
-from src.utils import save_ticker_args, load_ticker_args
+from source.utils import save_ticker_args, load_ticker_args
 
 def handle_page_input():
     st.session_state.page_name = st.session_state.page_name_input
     st.session_state.page_name_input = ''
 
 def run():
+    print("Running streamlit_app.py")
     st.set_page_config(layout="wide")
     if 'page_name' not in st.session_state:
         st.session_state.page_name = ''
@@ -18,7 +19,7 @@ def run():
         f"""{file_template}"""
         # Get page names from pages folder and store in list
 
-    pages_folder = Path("src") / "views"
+    pages_folder = Path("source") / "views"
     page_files = pages_folder.glob("*.py")
     st.sidebar.text_input("New Page Name:", key="page_name_input", on_change=handle_page_input)
 
@@ -43,14 +44,20 @@ def run():
             st.sidebar.text_input("New Page Name:", value="")
             st.rerun()
 
-
-    pages = [st.Page(Path('src') / "streamlit_app.py")]
+    top_pages = [
+        st.Page(Path('source') / "streamlit_app.py"),
+        st.Page(Path('source') / "tools" / "config.py"),
+        st.Page(Path('source') / "tools" / "coinbase.py"),   
+        st.Page(Path('source') / "tools" / "delete.py"),
+    ]
+    pages = []
     for file in page_files:
         if file.name != "__init__.py":
             f"""{(pages_folder / file.name).absolute()}"""
             pages.append(st.Page(pages_folder / file.name))
-
-    pages.append(st.Page(Path('src') / 'tools' / 'delete.py'))
+    
+    pages.sort(key=lambda page: page.title)
+    pages = top_pages + pages
 
     pg = st.navigation(pages)
     pg.run()

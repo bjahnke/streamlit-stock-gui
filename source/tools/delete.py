@@ -2,7 +2,7 @@ import streamlit as st
 import os
 
 # Directory containing the pages
-views_dir = 'src/views'
+views_dir = 'source/views'
 
 # Function to delete a file
 def delete_file(file_path):

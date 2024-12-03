@@ -7,10 +7,10 @@ from datetime import datetime, timedelta
 import pytz
 import ta
 import typing as t
-from src.utils import save_ticker_args
+from source.utils import save_ticker_args
 from dataclasses import dataclass
-import src.code.settings_model as settings_model
-from src.code.settings_model import FetchConfig
+import source.code.settings_model as settings_model
+from source.code.settings_model import FetchConfig
 
 
 def granularity_to_datetime(granularity: str, bar_count: int):
