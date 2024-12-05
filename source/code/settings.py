@@ -3,6 +3,7 @@ from datetime import timedelta
 from source.code.settings_model import Settings, SourceSettings
 import source.code.coinbase as cb_fetch
 import source.code.yfinance_fetch as yfinance_fetch
+import source.code.coingecko as cg_fetch
 
 class Interval:
     """Enum for time interval keys for consistency and avoiding typos"""
@@ -14,14 +15,16 @@ class Interval:
     SIX_HOUR = '6 hour'
     ONE_DAY = '1 day'
     FIVE_DAY = '5 day'
+    MAX = 'max'
 
 i = Interval
 
 class SourceOptions:
     COINBASE = 'coinbase'
     YFINANCE = 'yfinance'
+    COINGECKO = 'coingecko'
 
-source_options = [SourceOptions.COINBASE, SourceOptions.YFINANCE]
+source_options = [value for name, value in vars(SourceOptions).items() if not name.startswith('__')]
 
 
 source_settings = SourceSettings({
@@ -50,5 +53,11 @@ source_settings = SourceSettings({
             i.FIVE_DAY: FetchConfig('5d', timedelta(days=5))
         },
         get_price_history=yfinance_fetch.get_price_history
+    ),
+    SourceOptions.COINGECKO: FetchSettings(
+        {
+            i.ONE_DAY: FetchConfig('ONE_MINUTE', timedelta(minutes=1)),
+        }, 
+        get_price_history=cg_fetch.get_price_history
     )
 })

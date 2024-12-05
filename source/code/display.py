@@ -7,25 +7,17 @@ from datetime import datetime, timedelta
 import pytz
 import ta
 import typing as t
-from source.utils import save_ticker_args
+from source.tools.utils import save_ticker_args
 import source.code.yfinance_fetch as yfinance_fetch
 from source.code.settings import source_settings, Settings, SourceOptions
 import src.floor_ceiling_regime
+import source.code.indicators as sci
 
 
 ##########################################################################################
 ## PART 1: Define Functions for Pulling, Processing, and Creating Techincial Indicators ##
 ##########################################################################################
 
-# Fetch stock data based on the ticker, period, and interval
-def fetch_stock_data(ticker, period, interval):
-    end_date = datetime.now()
-    if period == '1wk':
-        start_date = end_date - timedelta(days=7)
-        data = yf.download(ticker, start=start_date, end=end_date, interval=interval)
-    else:
-        data = yf.download(ticker, period=period, interval=interval)
-    return round(data, 5)
 
 
 # Calculate basic metrics from the stock data
@@ -39,38 +31,17 @@ def calculate_metrics(data):
     volume = data['volume'].sum()
     return last_close, change, pct_change, high, low, volume
 
-# Add simple moving average (SMA) and exponential moving average (EMA) indicators
-def add_technical_indicators(data):
-    data['SMA_20'] = data.close.rolling(window=20).mean()
-    data['EMA_20'] = data.close.ewm(span=20, adjust=False).mean()
-    return data
 
-def trading_range(data, window):
-    data['High_Rolling'] = data['close'].rolling(window=window).max()
-    data['Low_Rolling'] = data['close'].rolling(window=window).min()
-    data['trading_range'] = (data.High_Rolling - data.Low_Rolling)
-    data['trading_range_lo_band'] = data.Low_Rolling + data.trading_range * .61
-    data['trading_range_hi_band'] = data.Low_Rolling + data.trading_range * .40
-    data['trading_range_23'] = data.Low_Rolling + data.trading_range * .23
-    data['trading_range_76'] = data.Low_Rolling + data.trading_range * .76
-    return data
-
-def sidebar(symbol, bar_count, period, chart_type, indicators):
-    st.sidebar.header('Settings')
-    symbol = st.sidebar.text_input('Enter Ticker', symbol)
-    bar_count = st.sidebar.number_input('Enter Bar Count', min_value=100, max_value=5000, value=bar_count)
-    period = st.sidebar.selectbox('Select Time Period', ['1d', '1wk', '1mo', '1y', 'max'], index=0)
-    chart_type = st.sidebar.selectbox('Select Chart Type', ['Candlestick', 'Line'], index=0)
-    indicators = st.sidebar.multiselect('Select Indicators', ['SMA 20', 'EMA 20', 'Trading Range'])
-    return symbol, period, chart_type, indicators
-
-
+from requests.exceptions import HTTPError
 def display_ticker_data(source: SourceOptions, symbol, interval, chart_type, indicators, bar_count):
 
     source_setting = source_settings.get_setting(source)
-    data = source_setting.get_price_history(symbol, bar_count, source_setting.get_setting(interval))
-    
-    data = add_technical_indicators(data)
+
+    try:
+        data = source_setting.get_price_history(symbol, bar_count, interval)
+    except HTTPError as e:
+        st.error(f"Error fetching data: {e}")
+        return
 
     save_ticker_args()
     
@@ -99,45 +70,7 @@ def display_ticker_data(source: SourceOptions, symbol, interval, chart_type, ind
     else:
         fig = px.line(data, x='Datetime', y='close')
 
-    for indicator in indicators:
-        if indicator == 'SMA 20':
-            fig.add_trace(go.Scatter(x=data['Datetime'], y=data['SMA_20'], name='SMA 20'))
-        elif indicator == 'EMA 20':
-            fig.add_trace(go.Scatter(x=data['Datetime'], y=data['EMA_20'], name='EMA 20'))
-        elif indicator == 'Trading Range':
-            data = trading_range(data, 200)
-            fig.add_trace(go.Scatter(x=x, y=data['High_Rolling'], name='High Rolling'))
-            fig.add_trace(go.Scatter(x=x, y=data['Low_Rolling'], name='Low Rolling'))
-            fig.add_trace(go.Scatter(x=x, y=data['trading_range_lo_band'], name='TR Low Band'))
-            fig.add_trace(go.Scatter(x=x, y=data['trading_range_hi_band'], name='TR High Band'))
-            fig.add_trace(go.Scatter(x=x, y=data['trading_range_23'], name='TR 23%'))
-            fig.add_trace(go.Scatter(x=x, y=data['trading_range_76'], name='TR 76%'))
-        elif indicator == 'Floor/Ceiling':
-            
-            fig.add_trace(go.Scatter(x=x, y=data['Floor'], name='Floor'))
-            fig.add_trace(go.Scatter(x=x, y=data['Ceiling'], name='Ceiling'))
-        elif indicator == 'Peaks':
-            pass
-        
-        d = data.copy()
-        d = d.reset_index().rename(columns={'index': 'bar_number'})
-        tables = src.floor_ceiling_regime.fc_scale_strategy_live(d)
-        # breakpoint()
-        fig.add_trace(go.Scatter(x=x, y=tables.enhanced_price_data['rg'], name='RG', yaxis='y2', line=dict(color='white')))
-
-        fig.update_layout(
-        title=f'{symbol} {interval.upper()} Chart',
-        xaxis_title='Time',
-        yaxis_title='Price (USD)',
-        yaxis2=dict(
-            title='RG',
-            overlaying='y',
-            side='right'
-        ),
-        autosize=True,
-        height=800
-        )
-        
+    sci.IndicatorManager.plot(fig, x, data, indicators)
 
     fig.update_layout(title=f'{symbol} {interval.upper()} Chart',
                       xaxis_title='Time',
@@ -149,6 +82,7 @@ def display_ticker_data(source: SourceOptions, symbol, interval, chart_type, ind
     fetched_data_cols = ['Datetime', 'open', 'high', 'low', 'close', 'volume']
     
     st.subheader('Historical Data')
+
     st.dataframe(data[fetched_data_cols])
     
     st.subheader('Technical Indicators')

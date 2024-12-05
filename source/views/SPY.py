@@ -2,4 +2,5 @@ import streamlit as st
 import source.code.display as display
 import source.code.sidebar as sidebar
 
-sidebar.create_sidebar("AAVE-BTC")
+fetch_args = sidebar.create_sidebar("SPY")
+display.display_ticker_data(**fetch_args)

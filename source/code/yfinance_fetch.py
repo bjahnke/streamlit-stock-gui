@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 import pytz
 import ta
 import typing as t
-from source.utils import save_ticker_args
+from source.tools.utils import save_ticker_args
 from dataclasses import dataclass
 import source.code.settings_model as settings_model
 from source.code.settings_model import FetchConfig

@@ -7,6 +7,8 @@ import os
 from source.code.settings_model import FetchConfig
 import requests
 import json
+import time
+
 load_dotenv()
 
 key_file = os.getenv('COINBASE_API_KEY')
@@ -34,10 +36,16 @@ def get_price_history(product_id: str, bars: int, fetch_config: FetchConfig, end
     while remaining_bars > 0:
         fetch_bars = min(remaining_bars, 350)
         data = _get_price_history(product_id, fetch_bars, fetch_config, current_end_date)
+        if data.empty:
+            break
         all_data.append(data)
         remaining_bars -= fetch_bars
         current_end_date = data['start'].min() - timedelta(seconds=1)
+        time.sleep(0.1)  # Ensure we do not exceed 10 requests per second
 
+    if not all_data:
+        return pd.DataFrame(columns=['start', 'low', 'high', 'open', 'close', 'volume'])
+    
     res = pd.concat(all_data).sort_values(by='start').reset_index(drop=True)
     res = res.astype({
         'low': 'float',
@@ -90,5 +98,7 @@ def _get_price_history(product_id: str, bars: int, fetch_config: FetchConfig, en
             
     price_data = pd.DataFrame(candles.to_dict()['candles'])
     price_data = price_data.iloc[::-1].reset_index(drop=True)
+    if price_data.empty:
+        return pd.DataFrame(columns=['start', 'low', 'high', 'open', 'close', 'volume'])
     price_data['start'] = pd.to_datetime(price_data['start'], unit='s', origin='unix')
     return price_data

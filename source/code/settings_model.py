@@ -37,10 +37,15 @@ class FetchSettings(Settings):
 
     def __init__(self, settings: t.Dict[str, FetchConfig], get_price_history: t.Callable):
         super().__init__(settings)
-        self.get_price_history = get_price_history
+        self._get_price_history = get_price_history
 
     def get_start_date(self, bars: int, interval: str):
         return self._settings[interval].get_start_time(bars)
+    
+    def get_price_history(self, symbol, bar_count, interval):
+        return self._get_price_history(symbol, bar_count, self.get_setting(interval))
+
+
 
 
 class SourceSettings(Settings):

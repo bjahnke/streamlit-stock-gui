@@ -2,4 +2,5 @@ import streamlit as st
 import source.code.display as display
 import source.code.sidebar as sidebar
 
-sidebar.create_sidebar("AERO-USD")
+fetch_args = sidebar.create_sidebar("BTC-ETH")
+display.display_ticker_data(**fetch_args)
