@@ -12,6 +12,7 @@ import source.code.yfinance_fetch as yfinance_fetch
 from source.code.settings import source_settings, Settings, SourceOptions
 import src.floor_ceiling_regime
 import source.code.indicators as sci
+from time import sleep
 
 
 ##########################################################################################
@@ -29,11 +30,11 @@ def calculate_metrics(data):
     high = data['high'].max()
     low = data['low'].min()
     volume = data['volume'].sum()
-    return last_close, change, pct_change, high, low, volume
+    return format_float(last_close), format_float(change), format_float(pct_change), format_float(high), format_float(low), volume
 
 
 from requests.exceptions import HTTPError
-def display_ticker_data(source: SourceOptions, symbol, interval, chart_type, indicators, bar_count):
+def display_ticker_data(source: SourceOptions, symbol, interval, chart_type, indicators, bar_count, **kwargs):
 
     source_setting = source_settings.get_setting(source)
 
@@ -42,21 +43,21 @@ def display_ticker_data(source: SourceOptions, symbol, interval, chart_type, ind
     except HTTPError as e:
         st.error(f"Error fetching data: {e}")
         return
-
-    save_ticker_args()
     
     last_close, change, pct_change, high, low, volume = calculate_metrics(data)
     
+    st.markdown(f'# {symbol}')
     col1, col2, col3 = st.columns(3)
     start_date = data['Datetime'].min()
     end_date = data['Datetime'].max()
+    
     col1.metric(label=f"{symbol} Last Price", value=f"{last_close} USD", delta=f"{change} ({pct_change}%)")
     col2.metric(label="Start Date", value=start_date.strftime('%Y-%m-%d %H:%M'))
     col3.metric(label="End Date", value=end_date.strftime('%Y-%m-%d %H:%M'))
     col1, col2, col3 = st.columns(3)
-    col1.metric("High", f"{high} USD")
-    col2.metric("Low", f"{low} USD")
-    col3.metric("Volume", f"{volume}")
+    # col1.metric("High", f"{high} USD")
+    # col2.metric("Low", f"{low} USD")
+    # col3.metric("Volume", f"{volume}")
     
     # Plot the stock price chart
     fig = go.Figure()
@@ -98,6 +99,24 @@ def display_ticker_data(source: SourceOptions, symbol, interval, chart_type, ind
 
     columns_to_display = [col for col in filtered_data.columns if col not in fetched_data_cols]
     st.dataframe(filtered_data[columns_to_display])
-    
+
+    if kwargs.get('live_data', False):
+        sleep(60)
+        st.rerun()
 
 
+def format_float(value: float) -> str:
+    """
+    Format a float to:
+    - Always show 2 decimal places for values >= 1.
+    - Show 4 most significant decimals for values < 1.
+
+    :param value: The float value to format.
+    :return: A string representation of the formatted value.
+    """
+    if value >= 1:
+        # Fixed format with 2 decimal places
+        return f"{value:.2f}"
+    else:
+        # Format with 4 significant digits
+        return f"{value:.4g}"

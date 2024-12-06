@@ -58,6 +58,8 @@ source_settings = SourceSettings({
         {
             i.ONE_DAY: FetchConfig('ONE_MINUTE', timedelta(minutes=1)),
         }, 
-        get_price_history=cg_fetch.get_price_history
+        get_price_history=cg_fetch.get_price_history,
+        min_bars=1,
+        max_bars=300
     )
 })

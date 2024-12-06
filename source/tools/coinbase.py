@@ -64,33 +64,54 @@ from source.code.sidebar import coinbase_scan_form
 from source.code.settings import source_settings
 
 
-def scan(symbols, interval, bar_count, **_):
+def regime_scanner(symbol, largest_table, bar_count, interval):
     floor_ceiling = sci.FloorCeiling()
-
     coinbase_settings = source_settings.get('coinbase')
+    data = coinbase_settings.get_price_history(symbol, bar_count, interval)
+    largest_table = data if len(data) > len(largest_table) else largest_table
+    if data.empty:
+        print(f'No data for {symbol}')
+        return
+    try:
+        floor_ceiling.update(data)
+    except Exception as e:
+        print(f'Could Not Process {symbol}: {e}')
+        return
+    floor_ceiling.tables.regime_table['symbol'] = symbol
+    return floor_ceiling.tables.regime_table, largest_table
+
+def trading_range_scanner(symbol, largest_table, bar_count, interval):
+    trading_range = sci.TradingRange()
+    coinbase_settings = source_settings.get('coinbase')
+    data = coinbase_settings.get_price_history(symbol, bar_count, interval)
+    largest_table = data if len(data) > len(largest_table) else largest_table
+    if data.empty:
+        print(f'No data for {symbol}')
+        return
+    try:
+        trading_range.update(data)
+    except Exception as e:
+        print(f'Could Not Process {symbol}: {e}')
+        return
+    trading_range.tables.regime_table['symbol'] = symbol
+    return trading_range.tables.regime_table, largest_table
+
+def scan(symbols, interval, bar_count, **_):
+    
     regimes = []
     largest_table = pd.DataFrame()
     for i, symbol in enumerate(symbols):
-        data = coinbase_settings.get_price_history(symbol, bar_count, interval)
-        largest_table = data if len(data) > len(largest_table) else largest_table
-        if data.empty:
-            print(f'No data for {symbol}')
-            continue
-        try:
-            floor_ceiling.update(data)
-        except Exception as e:
-            print(f'Could Not Process {symbol}: {e}')
-            continue
-        floor_ceiling.tables.regime_table['symbol'] = symbol
-        regimes.append(floor_ceiling.tables.regime_table)
+        res = regime_scanner(symbol, largest_table, bar_count, interval)
+        if res is not None:
+            regime_table, largest_table = res
+            regimes.append(regime_table)
 
     regime_table = pd.concat(regimes).reset_index(drop=True)
 
     # express the start and end columns in datetime for readability
     regime_table.start = largest_table.loc[regime_table.start, 'Datetime'].values
     regime_table.end = largest_table.loc[regime_table.end, 'Datetime'].values
-    # st.write(data.loc[regime_table.start, 'Datetime'])
-    # st.write(regime_table)
+
     return regime_table
 
 def parallel_scan(symbols, interval, bar_count, num_processes=4, **kwargs):

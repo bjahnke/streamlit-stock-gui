@@ -26,13 +26,6 @@ def run():
     if st.sidebar.button("Add Page"):
         if st.session_state.page_name:
             page_name = st.session_state.page_name
-            st.session_state.ticker_args[page_name] = dict()
-            st.session_state.ticker_args[page_name]["symbol"] = page_name
-            st.session_state.ticker_args[page_name]["interval"] = '1 day'
-            st.session_state.ticker_args[page_name]["chart_type"] = 'Candlestick'
-            st.session_state.ticker_args[page_name]["indicators"] = ['Trading Range', 'Floor/Ceiling']
-            st.session_state.ticker_args[page_name]["bar_count"] = 365
-            st.session_state.ticker_args[page_name]["source"] = 'yfinance'
             (pages_folder / f"{page_name}.py").write_text(
                     file_template.format(
                         new_page_name=page_name,
@@ -40,7 +33,6 @@ def run():
                     ),
                     encoding="utf-8",
             )
-            save_ticker_args()
             st.sidebar.text_input("New Page Name:", value="")
             st.rerun()
 

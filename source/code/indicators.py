@@ -20,6 +20,20 @@ class Indicator:
 class TradingRange(Indicator):
 
     def update(self, data: pd.DataFrame) -> pd.DataFrame:
+        tr = trading_range(data, 200)
+        # data['High_Rolling'] = data['close'].rolling(window=window).max()
+        # data['Low_Rolling'] = data['close'].rolling(window=window).min()
+        # data['trading_range'] = (data.High_Rolling - data.Low_Rolling)
+        # data['trading_range_lo_band'] = data.Low_Rolling + data.trading_range * .61
+        # data['trading_range_hi_band'] = data.Low_Rolling + data.trading_range * .40
+        # data['trading_range_23'] = data.Low_Rolling + data.trading_range * .23
+        # data['trading_range_76'] = data.Low_Rolling + data.trading_range * .76
+        tr['signal'] = 0
+        tr.loc[(tr['close'] > tr['Low_Rolling']) & (tr['close'] <= tr['trading_range_23']), 'signal'] = 0
+        tr.loc[(tr['close'] > tr['trading_range_23']) & (tr['close'] <= tr['trading_range_hi_band']), 'signal'] = 1
+        tr.loc[(tr['close'] > tr['trading_range_hi_band']) & (tr['close'] <= tr['trading_range_lo_band']), 'signal'] = 2
+        tr.loc[(tr['close'] > tr['trading_range_lo_band']) & (tr['close'] <= tr['trading_range_76']), 'signal'] = 3
+        tr.loc[(tr['close'] > tr['trading_range_76']) & (tr['close'] <= tr['High_Rolling']), 'signal'] = 4
         return trading_range(data, 200)
     
     def plot(self, fig, x, data):

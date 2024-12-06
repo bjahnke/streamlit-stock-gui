@@ -9,8 +9,8 @@ with open('api_path.json', 'r') as file:
 cg = CoinGeckoAPI(demo_api_key=coingecko_key)
 
 
-def get_price_history(symbol, *__, **_):
-    data = cg.get_coin_market_chart_by_id(id=symbol, vs_currency='usd', days='90')
+def get_price_history(symbol, bars=None, *__, **_):
+    data = cg.get_coin_market_chart_by_id(id=symbol, vs_currency='usd', days=str(bars))
     data = pd.DataFrame.from_records(data['prices'], columns=['Datetime', 'close'])
     data['open'] = data['close']
     data['high'] = data['close']
