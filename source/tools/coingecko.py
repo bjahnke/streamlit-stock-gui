@@ -60,12 +60,12 @@ with col4:
     submit = st.button('Submit', use_container_width=True)
 
 st.markdown('# Coin Markets')
-products_viewer(config_pkl_path='cg_column_config.pkl', load_data=lambda: get_products(**search_args), key='cg_markets')
+products_viewer(config_pkl_path='cg_column_config.pkl', load_data=lambda: get_products(**search_args), key='cg_markets', name='Markets')
 
 @st.cache_data
 def get_coins_categories():
     return pd.DataFrame.from_records(cg.get_coins_categories())
 
 st.markdown('# Coin Categories')
-products_viewer(config_pkl_path='cg_category_column_config.pkl', load_data=get_coins_categories, key='cg_category')
+products_viewer(config_pkl_path='cg_category_column_config.pkl', load_data=get_coins_categories, key='cg_category', name='Categories')
 

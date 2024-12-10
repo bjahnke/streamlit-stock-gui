@@ -63,3 +63,17 @@ source_settings = SourceSettings({
         max_bars=300
     )
 })
+
+
+class Watchlist: 
+    def __init__(self):
+        self.watchlist = dict()
+
+    def add(self, symbol, source, interval):
+        self.watchlist[(symbol, source, interval)] = {
+            'symbol': symbol,
+            'source': source,
+        }
+
+    def render(self):
+        pass

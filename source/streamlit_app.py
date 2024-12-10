@@ -4,7 +4,11 @@ from source.tools.utils import save_ticker_args, load_ticker_args
 
 def handle_page_input():
     st.session_state.page_name = st.session_state.page_name_input
-    st.session_state.page_name_input = ''
+    # st.session_state.page_name_input = ''
+
+
+def init_session_state():
+    st.session_state.watchlist = dict()
 
 def run():
     print("Running streamlit_app.py")
@@ -40,7 +44,8 @@ def run():
         st.Page(Path('source') / "streamlit_app.py"),
         st.Page(Path('source') / "tools" / "config.py"),
         st.Page(Path('source') / "tools" / "coinbase.py"),
-        st.Page(Path('source') / "tools" / "coingecko.py"),   
+        st.Page(Path('source') / "tools" / "coingecko.py"),
+        st.Page(Path('source') / "tools" / "watchlist.py"),   
         st.Page(Path('source') / "tools" / "delete.py"),
     ]
     pages = []

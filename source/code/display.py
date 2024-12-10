@@ -34,6 +34,7 @@ def calculate_metrics(data):
 
 
 from requests.exceptions import HTTPError
+import uuid
 def display_ticker_data(source: SourceOptions, symbol, interval, chart_type, indicators, bar_count, **kwargs):
 
     source_setting = source_settings.get_setting(source)
@@ -62,6 +63,7 @@ def display_ticker_data(source: SourceOptions, symbol, interval, chart_type, ind
     # Plot the stock price chart
     fig = go.Figure()
     x  = data['Datetime']
+    unique_id = str(uuid.uuid4())
     if chart_type == 'Candlestick':
         fig.add_trace(go.Candlestick(x=x,
                                      open=data['open'],
@@ -71,14 +73,14 @@ def display_ticker_data(source: SourceOptions, symbol, interval, chart_type, ind
     else:
         fig = px.line(data, x='Datetime', y='close')
 
-    sci.IndicatorManager.plot(fig, x, data, indicators)
+    indicator_data = sci.IndicatorManager.plot(fig, x, data, indicators)
 
     fig.update_layout(title=f'{symbol} {interval.upper()} Chart',
                       xaxis_title='Time',
                       yaxis_title='Price (USD)',
                       autosize=True,
                       height=800)
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, use_container_width=True, key=f"{symbol}_{interval}_{unique_id}")
 
     fetched_data_cols = ['Datetime', 'open', 'high', 'low', 'close', 'volume']
     
@@ -87,7 +89,7 @@ def display_ticker_data(source: SourceOptions, symbol, interval, chart_type, ind
     st.dataframe(data[fetched_data_cols])
     
     st.subheader('Technical Indicators')
-    query = st.text_input("Enter query to filter data:")
+    query = st.text_input("Enter query to filter data:", key=f"{symbol}_{interval}{unique_id}")
     if query:
         try:
             filtered_data = data.query(query)
@@ -98,10 +100,10 @@ def display_ticker_data(source: SourceOptions, symbol, interval, chart_type, ind
         filtered_data = data
 
     columns_to_display = [col for col in filtered_data.columns if col not in fetched_data_cols]
-    st.dataframe(filtered_data[columns_to_display])
+    st.dataframe(indicator_data)
 
     if kwargs.get('live_data', False):
-        sleep(60)
+        sleep(30)
         st.rerun()
 
 

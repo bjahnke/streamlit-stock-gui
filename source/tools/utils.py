@@ -62,9 +62,10 @@ def column_filter_config(col_config, config_pkl_path, key, table_height=800):
     return col_config
 
 
-def products_viewer(config_pkl_path, load_data, key):
+def products_viewer(config_pkl_path, load_data, key, use_container_width=False, name=''):
     table_height = 800
     products = load_data()
+
     
     config_pkl_path = Path(config_pkl_path)
     key = config_pkl_path.stem
@@ -85,52 +86,52 @@ def products_viewer(config_pkl_path, load_data, key):
     for column in products.columns:
         if column not in edited_columns_config.columns:
             edited_columns_config[column] = True
-
-    st.markdown(
-        '[Learn more about DataFrame query](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.query.html)',
-        unsafe_allow_html=True
-    )
-    query = st.text_input("Query", key=f'{key}_query')
-
-
-    col1, col2 = st.columns([1, 7])
-
-
-    
-    with col1:
-        edited_columns_config = column_filter_config(
-            edited_columns_config, 
-            config_pkl_path=config_pkl_path, 
-            key=key, table_height=table_height)
-
-    
-    with col2:
-        filtered_products = query_call(products, query)
-        visible_columns = edited_columns_config.columns[edited_columns_config.loc['Show']].tolist()
-
-        filtered_products = filtered_products[visible_columns]
-
-        # Apply gradient styling to float columns
-        float_columns = filtered_products.select_dtypes(include=['float']).columns
-        styled_df = filtered_products.style.background_gradient(subset=float_columns, cmap='viridis')
-
-        # format floats to show commas
-        styled_df = styled_df.format(precision=4, thousands=",")
-
-        kwargs = dict()
-        if 'url' in filtered_products.columns:
-            kwargs['column_config'] = {
-                'url': st.column_config.LinkColumn(display_text='Link', width='small')
-            }
-            kwargs['column_order'] = ['url'] + [col for col in filtered_products.columns if col != 'url']
-            
-        st.dataframe(
-            styled_df, 
-            height=table_height, 
-            key=key, 
-            use_container_width=True,
-            **kwargs
+    with st.expander(name, expanded=True):
+        st.markdown(
+            '[Learn more about DataFrame query](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.query.html)',
+            unsafe_allow_html=True
         )
+        query = st.text_input("Query", key=f'{key}_query')
+
+
+        col1, col2 = st.columns([1, 7])
+
+
+        
+        with col1:
+            edited_columns_config = column_filter_config(
+                edited_columns_config, 
+                config_pkl_path=config_pkl_path, 
+                key=key, table_height=table_height)
+
+        
+        with col2:
+            filtered_products = query_call(products, query)
+            visible_columns = edited_columns_config.columns[edited_columns_config.loc['Show']].tolist()
+
+            filtered_products = filtered_products[visible_columns]
+
+            # Apply gradient styling to float columns
+            float_columns = filtered_products.select_dtypes(include=['float']).columns
+            styled_df = filtered_products.style.background_gradient(subset=float_columns, cmap='viridis')
+
+            # format floats to show commas
+            styled_df = styled_df.format(precision=4, thousands=",")
+
+            kwargs = dict()
+            if 'url' in filtered_products.columns:
+                kwargs['column_config'] = {
+                    'url': st.column_config.LinkColumn(display_text='Link', width='small')
+                }
+                kwargs['column_order'] = ['url'] + [col for col in filtered_products.columns if col != 'url']
+                
+            st.dataframe(
+                styled_df, 
+                height=table_height, 
+                key=key, 
+                use_container_width=use_container_width,
+                **kwargs
+            )
 
     return products
         

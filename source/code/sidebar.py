@@ -91,7 +91,7 @@ def new_search_form(st_obj, saved_fetch_args, track_change):
 
 def coinbase_scan_form():
     fetch_args = load_saved_args('coinbase')
-    track_change = hof_track_change(fetch_args)
+    track_change = hof_track_change(st.session_state.ticker_args['coinbase'])
     interval_options = source_settings.get_setting('coinbase').options
     
     st.markdown('### Coinbase Scan')
