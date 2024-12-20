@@ -13,6 +13,8 @@ from source.code.sidebar import new_search_form
 import source.code.indicators as sci
 import multiprocessing
 import warnings
+from source.code.display import plot_historical_data
+import numpy as np
 
 warnings.simplefilter(action='ignore', category=FutureWarning)
 # Warning-causing lines of code here
@@ -143,8 +145,6 @@ fetch_args, cols = coinbase_scan_form()
 with cols[0]:
     run_button = st.button('Run Scanner')
 
-
-
 if run_button:
     symbols = products.loc[products.quote_currency_id == 'USD', 'product_id'].to_list()
     _rg_table, _range_table = parallel_scan(symbols, **fetch_args)
@@ -156,6 +156,12 @@ if run_button:
 else:
     try:
         products_viewer('cb_scan_config.pkl', lambda: pd.read_pickle('cb_scan.pkl'), key='cb_scan', use_container_width=True)
-        products_viewer('cb_scan_range_config.pkl', lambda: pd.read_pickle('cb_scan_range.pkl'), key='cb_scan_range')
+        col1, col2 = st.columns([1,2])
+        with col1:
+            products_viewer('cb_scan_range_config.pkl', lambda: pd.read_pickle('cb_scan_range.pkl'), key='cb_scan_range')
+        with col2:
+            data = source_settings.get('coinbase').get_price_history('BTC-USD', 400, '1 hour')
+            plot_historical_data(data, 'Candlestick', ['FloorCeiling', 'TradingRangePeak'])
+            pass
     except FileNotFoundError:
         pass

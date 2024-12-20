@@ -128,3 +128,5 @@ cython_debug/
 .streamlit/
 
 api_path.json
+
+node_modules/

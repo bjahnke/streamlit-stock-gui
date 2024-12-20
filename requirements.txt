@@ -6,4 +6,5 @@ ta
 coinbase-advanced-py
 python-dotenv
 pycoingecko
+sqlalchemy
 git+ssh://git@github.com/bjahnke/blue_bird_pms.git

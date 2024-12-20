@@ -3,6 +3,7 @@ import streamlit as st
 from pathlib import Path
 import pandas as pd
 import os
+import uuid
 
 def save_ticker_args():
     with open("ticker_args.pkl", "wb") as f:
@@ -95,6 +96,60 @@ def products_viewer(config_pkl_path, load_data, key, use_container_width=False, 
 
 
         col1, col2 = st.columns([1, 7])
+        
+        with col1:
+            edited_columns_config = column_filter_config(
+                edited_columns_config, 
+                config_pkl_path=config_pkl_path, 
+                key=key, table_height=table_height)
+
+        
+        with col2:
+            filtered_products = query_call(products, query)
+            visible_columns = edited_columns_config.columns[edited_columns_config.loc['Show']].tolist()
+
+            filtered_products = filtered_products[visible_columns]
+
+            # Apply gradient styling to float columns
+            float_columns = filtered_products.select_dtypes(include=['float']).columns
+            
+
+            # format floats to show comma
+            
+
+            kwargs = dict()
+            if 'url' in filtered_products.columns:
+                kwargs['column_config'] = {
+                    'url': st.column_config.LinkColumn(display_text='Link', width='small')
+                }
+                kwargs['column_order'] = ['url'] + [col for col in filtered_products.columns if col != 'url']
+            # Generate a unique identifier for the session
+            session_id = uuid.uuid4()
+            st.session_state['session_id'] = session_id
+            filtered_products['Show'] = False
+            styled_df = filtered_products.style.background_gradient(subset=float_columns, cmap='viridis')
+            styled_df = styled_df.format(precision=4, thousands=",")
+            st.data_editor(
+                styled_df, 
+                height=table_height, 
+                key=str(session_id), 
+                use_container_width=use_container_width,
+                **kwargs
+            )
+
+    return products
+
+
+def _data_viewer(name, table_height, products, edited_columns_config, config_pkl_path, key, use_container_width=False):
+    with st.expander(name, expanded=True):
+        st.markdown(
+            '[Learn more about DataFrame query](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.query.html)',
+            unsafe_allow_html=True
+        )
+        query = st.text_input("Query", key=f'{key}_query')
+
+
+        col1, col2 = st.columns([1, 7])
 
 
         
@@ -132,8 +187,6 @@ def products_viewer(config_pkl_path, load_data, key, use_container_width=False, 
                 use_container_width=use_container_width,
                 **kwargs
             )
-
-    return products
         
 
 def color_gradient(value):
