@@ -8,6 +8,7 @@ from source.code.settings_model import FetchConfig
 import requests
 import json
 import time
+import streamlit as st
 
 load_dotenv()
 
@@ -21,11 +22,12 @@ if key_file is None:
 
             print(key_file)
     except FileNotFoundError:
-        raise FileNotFoundError(f"API key file not found at {config_path}")
+        st.error(f"API key file not found at {config_path}")
 
     # raise ValueError("Coinbase API not saved, please specify the path to the API key file in config")
 
-client = RESTClient(key_file=key_file)
+if key_file is not None:
+    client = RESTClient(key_file=key_file)
 
 
 def get_price_history(product_id: str, bars: int, fetch_config: FetchConfig, end_date=None):

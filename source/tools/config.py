@@ -39,6 +39,13 @@ if st.button("Load API Key"):
     load_api_file(file_path)
 
 
-st.text_input("name")
-st.text
+cg_key = st.text_input("Coingecko API Key")
+if st.button("Save Coingecko API Key"):
+    try:
+        config_path = Path('.') / 'cg_api_key.json'
+        with open(config_path, 'w') as key_file:
+            json.dump({"cg_key": cg_key}, key_file)
+        st.success("Coingecko API key saved to JSON file.")
+    except Exception as e:
+        st.error(f"Error saving Coingecko API key: {e}")
 

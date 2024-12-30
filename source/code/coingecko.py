@@ -2,7 +2,7 @@ from pycoingecko import CoinGeckoAPI
 import pandas as pd
 import json
 
-with open('api_path.json', 'r') as file:
+with open('cg_api_key.json', 'r') as file:
     api_keys = json.load(file)
     coingecko_key = api_keys.get('coingecko_key')
 
