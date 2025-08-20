@@ -130,3 +130,5 @@ cython_debug/
 api_path.json
 
 node_modules/
+
+*.pkl

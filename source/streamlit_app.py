@@ -9,6 +9,7 @@ top_pages = [
     st.Page(Path('source') / "tools" / 'coingecko' / "coingecko.py"),
     st.Page(Path('source') / "tools" / "watchlist.py"),   
     st.Page(Path('source') / "tools" / "delete.py"),
+    st.Page(Path('source') / "tools" / "db_viewer.py"),
 ]
 
 def handle_page_input():

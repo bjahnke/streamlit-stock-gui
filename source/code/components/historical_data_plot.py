@@ -12,6 +12,7 @@ import source.code.yfinance_fetch as yfinance_fetch
 from source.code.settings import source_settings, Settings, SourceOptions
 import src.floor_ceiling_regime
 import source.code.indicators as sci
+import strategy
 from time import sleep
 from requests.exceptions import HTTPError
 import uuid
@@ -32,12 +33,15 @@ def plot_historical_data(fig, data, chart_type, indicators):
     else:
         fig = px.line(data, x='Datetime', y='close')
 
-    indicator_data = sci.IndicatorManager.plot(fig, x, data, indicators)
+    # indicator_data = sci.IndicatorManager.plot(fig, x, data, indicators)
+    indicator_data = strategy.IndicatorManager.plot(fig, x, data, indicators)
 
     fig.update_layout(title=f'Price Chart',
                       xaxis_title='Time',
                       yaxis_title='Price (USD)',
                       autosize=True,
                       height=800)
+    
+    
     
     return fig, indicator_data

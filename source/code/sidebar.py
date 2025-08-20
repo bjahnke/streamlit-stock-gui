@@ -1,3 +1,18 @@
+"""
+This module provides functionality for creating and managing the sidebar in a Streamlit application.
+
+Functions:
+- load_saved_args(page_name): Loads or initializes saved arguments for a specific page.
+- create_sidebar(new_page_name): Creates a sidebar for a new page with user-configurable options.
+- hof_track_change(fetch_args): Higher-order function to track changes in user inputs.
+- new_search_form(st_obj, saved_fetch_args, track_change): Renders a form for configuring search parameters in the sidebar.
+- coinbase_scan_form(): Renders a form specific to Coinbase scan settings.
+
+Usage:
+- Use `create_sidebar` to dynamically generate a sidebar for a new page.
+- Use `coinbase_scan_form` for Coinbase-specific configurations.
+"""
+
 import streamlit as st
 import source.code.display as display
 import source.code.yfinance_fetch as yfinance_fetch
@@ -8,6 +23,15 @@ from source.code.settings_model import FetchArgs
 from source.tools.utils import save_ticker_args
 
 def load_saved_args(page_name):
+    """
+    Loads or initializes saved arguments for a specific page.
+
+    Parameters:
+    - page_name (str): The name of the page for which to load or initialize arguments.
+
+    Returns:
+    - FetchArgs: The arguments for the specified page.
+    """
     if 'ticker_args' not in st.session_state:
         st.session_state.ticker_args = pd.read_pickle('ticker_args.pkl')
     if page_name not in st.session_state.ticker_args:
@@ -31,6 +55,15 @@ def load_saved_args(page_name):
 
 
 def create_sidebar(new_page_name: str):
+    """
+    Creates a sidebar for a new page with user-configurable options.
+
+    Parameters:
+    - new_page_name (str): The name of the new page.
+
+    Returns:
+    - dict: The updated fetch arguments for the page.
+    """
     saved_fetch_args = load_saved_args(new_page_name)
     track_change = hof_track_change(st.session_state.ticker_args[new_page_name])
     fetch_args = new_search_form(st.sidebar, saved_fetch_args=saved_fetch_args, track_change=track_change)
@@ -39,6 +72,15 @@ def create_sidebar(new_page_name: str):
 
 
 def hof_track_change(fetch_args):
+    """
+    Higher-order function to track changes in user inputs.
+
+    Parameters:
+    - fetch_args (dict): The current fetch arguments.
+
+    Returns:
+    - function: A function to track changes for a specific input field.
+    """
     def track_change(key, input_field):
         result = input_field(fetch_args[key], f'{key}')
         if key == 'indicators':
@@ -50,7 +92,17 @@ def hof_track_change(fetch_args):
 
 
 def new_search_form(st_obj, saved_fetch_args, track_change):
+    """
+    Renders a form for configuring search parameters in the sidebar.
 
+    Parameters:
+    - st_obj (Streamlit object): The Streamlit object to render the form.
+    - saved_fetch_args (dict): The saved fetch arguments.
+    - track_change (function): A function to track changes in input fields.
+
+    Returns:
+    - dict: The updated fetch arguments.
+    """
     fetch_args = saved_fetch_args 
     source = fetch_args.get('source', 'yfinance')
     interval_settings = source_settings.get_setting(source)
@@ -90,6 +142,12 @@ def new_search_form(st_obj, saved_fetch_args, track_change):
 
 
 def coinbase_scan_form():
+    """
+    Renders a form specific to Coinbase scan settings.
+
+    Returns:
+    - tuple: The fetch arguments and the layout columns for the form.
+    """
     fetch_args = load_saved_args('coinbase')
     track_change = hof_track_change(st.session_state.ticker_args['coinbase'])
     interval_options = source_settings.get_setting('coinbase').options

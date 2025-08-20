@@ -1,0 +1,110 @@
+# Ignore .git folder (version control metadata)
+.git/
+venv/
+
+# Ignore operating system generated files
+.DS_Store
+.Thumbs.db
+
+# Ignore IDE project files
+.idea/
+.vscode/
+.metadata/
+
+# Ignore build and deployment artifacts
+build/
+/deploy/
+/dist/
+
+# Ignore temporary files and folders
+tmp/
+temp/
+
+# Ignore IDE generated cache files
+/.cache/
+/.llamocache/
+
+# Ignore logs and other runtime data
+logs/
+data/
+
+# Exclude specific file types (e.g., executable files, DLLs)
+*.exe
+*.dll
+*.xlsx
+*.csv
+*.db
+*.pkl
+*.mp3
+*.wav
+*.m4a
+*.mp4
+*.pptx
+*.pdf
+*.csv#
+
+# Images
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.svg
+*.webp
+*.ico
+
+# Web media
+/assets/
+/public/
+/images/
+
+# Python-specific ignores:
+
+
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# JavaScript/TypeScript-specific ignores:
+node_modules/
+src/types.ts: 
+.d.ts
+
+dist/
+
+# General project noise
+*.log
+*.pickle
+*.gpickle
+*.crdownload
+*.env
+*.in
+*.rpt
+*.mpg
+*.woff2
+*.otf
+*.kdbx
+*.egg-info/
+.DS_Store
+Thumbs.db
+
+# IDEs and devtools
+.vscode/
+.idea/
+*.code-workspace
+*.babelrc
+*.npmignore
+*.editorconfig
+*.gitattributes
+*.gitmodules
+*.gitignore
+
+# Common filenames to ignore
+Dockerfile
+Makefile
+LICENSE
+NewFile
+
+# Output/build junk
+dist/
+build/
+coverage/
