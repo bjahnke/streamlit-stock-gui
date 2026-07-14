@@ -109,7 +109,7 @@ source_settings = SourceSettings({
     ),
     SourceOptions.COINGECKO: FetchSettings(
         {
-            i.ONE_DAY: FetchConfig('ONE_MINUTE', timedelta(minutes=1)),
+            i.ONE_DAY: FetchConfig('ONE_MINUTE', timedelta(days=1)),
             i.ONE_HOUR: FetchConfig('ONE_HOUR', timedelta(hours=1))
         }, 
         get_price_history=cg_fetch.get_price_history,

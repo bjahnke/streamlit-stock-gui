@@ -263,6 +263,7 @@ class Regime(Indicator):
     def _update(self, value) -> fcr.FcStrategyTables:
         value = value.reset_index(drop=True).reset_index().rename(columns={'index': 'bar_number'})
         self._value = fcr.fc_scale_strategy_live(value, find_retest_swing=False)
+        print(self._value.peak_table.columns)
         return self._value
     
     @property
@@ -275,7 +276,7 @@ class Regime(Indicator):
         if x is None:
             x = data.index
         """Assumes data is enhanced_price_data type dataframe"""
-        print(data.columns)
+        
         fig.add_trace(go.Scatter(x=x, y=data['rg'], name='rg', yaxis='y2', line=dict(color='white')))
         fig.add_trace(go.Scatter(x=x, y=data['lo2'], name='lo2', mode='markers', marker=dict(color='lightgreen')))
         fig.add_trace(go.Scatter(x=x, y=data['hi2'], name='hi2', mode='markers', marker=dict(color='orange')))
@@ -288,11 +289,171 @@ class Regime(Indicator):
                 side='right'
             ),
         )
+        print(self.analyze_peaks())
         return fig
     
     def update_and_plot(self, data: pd.DataFrame, fig, x):
         data = self.update(data)
         self.plot(self._value.enhanced_price_data, fig, x)
+
+    def analyze_peaks(self):
+        """
+        peak columns ['start', 'end', 'type', 'lvl', 'st_px', 'en_px']
+
+        analyze l2 swing performance
+         - for each swing (process -1 and 1 type swings separately):
+         - record the length of time between peak.end and price cross (first bar after peak.end where swing low)
+         - record the percent change between entry and max price (if processing swing low), or min price if swing high
+        """
+        peaks = self._value.peak_table.loc[self._value.peak_table.lvl == 2].copy()
+        price_data = self._value.enhanced_price_data
+        
+        results = []
+        for sw_type in [1, -1]:
+            swings = peaks.loc[(peaks.type == sw_type)]
+            
+            for _, swing in swings.iterrows():
+                swing_end = int(swing['end'])
+                swing_price = swing['en_px']
+                
+                # Get price data after swing end
+                future_prices = price_data.iloc[swing_end + 1:]
+                
+                if len(future_prices) == 0:
+                    continue
+                
+                # Find first cross based on swing type
+                if sw_type == 1:  # Swing low - look for price crossing above
+                    cross_idx = future_prices[future_prices['close'] > swing_price].index
+                    if len(cross_idx) > 0:
+                        bars_to_cross = cross_idx[0] - swing_end
+                        max_price = future_prices.loc[:cross_idx[0], 'close'].max()
+                        pct_change = ((max_price - swing_price) / swing_price) * 100
+                        active = False
+                    else:
+                        bars_to_cross = len(future_prices)
+                        max_price = future_prices['close'].max()
+                        pct_change = ((max_price - swing_price) / swing_price) * 100
+                        active = True
+                else:  # Swing high - look for price crossing below
+                    cross_idx = future_prices[future_prices['close'] < swing_price].index
+                    if len(cross_idx) > 0:
+                        bars_to_cross = cross_idx[0] - swing_end
+                        min_price = future_prices.loc[:cross_idx[0], 'close'].min()
+                        pct_change = ((swing_price - min_price) / swing_price) * 100
+                        active = False
+                    else:
+                        bars_to_cross = len(future_prices)
+                        min_price = future_prices['close'].min()
+                        pct_change = ((swing_price - min_price) / swing_price) * 100
+                        active = True
+                
+                results.append({
+                    'swing_type': sw_type,
+                    'swing_end': swing_end,
+                    'swing_price': swing_price,
+                    'bars_to_cross': bars_to_cross,
+                    'pct_change': pct_change,
+                    'active': active
+                })
+        return pd.DataFrame(results)
+    
+    def plot_peak_best_case(self, peaks_df=None, top_n=None, target_fig: go.Figure = None):
+        """
+        Visualize "best-case" performance for longs vs shorts based on the output
+        of `analyze_peaks()`.
+
+        Approach:
+        - Use the `pct_change` column (percentage) computed by `analyze_peaks()` as
+          the per-trade return (positive for both longs and shorts in that output).
+        - For best-case cumulative growth: sort returns descending (best trades first),
+          then compute cumulative product of (1 + return_decimal) to simulate
+          sequentially capturing the best trades.
+        - Also produce a box/violin plot (and points) to compare the full
+          distribution of returns between longs and shorts.
+
+        Parameters:
+        - peaks_df: optional DataFrame produced by `analyze_peaks()`; if None,
+                    the method will call `self.analyze_peaks()`.
+        - top_n: optional int, limit to top N best trades for the cumulative growth
+                 curve. If None, use all trades.
+
+        Returns:
+        - dict with Plotly figures: {'growth': fig_growth, 'box': fig_box}
+        """
+        # Acquire peaks data
+        df = peaks_df if peaks_df is not None else self.analyze_peaks()
+        if df is None or df.empty:
+            print("No peak data available to plot.")
+            return None
+
+        # Normalize/clean data
+        df = df.copy()
+        # Ensure numeric
+        df['pct_change'] = pd.to_numeric(df['pct_change'], errors='coerce')
+        df = df.dropna(subset=['pct_change'])
+        if df.empty:
+            print("No valid pct_change values to plot.")
+            return None
+
+        figs = {}
+
+        # Growth figure (best-trades-first cumulative compounding)
+        fig_growth = go.Figure()
+        print(df)
+        for sw_type, label in [(1, 'Longs (swing lows)'), (-1, 'Shorts (swing highs)')]:
+            arr = df.loc[df.swing_type == sw_type, 'pct_change'].astype(float) / 100.0
+            if arr.empty:
+                continue
+            arr_sorted = arr
+
+            if top_n is not None:
+                arr_sorted = arr_sorted[:top_n]
+            # cumulative product to simulate sequentially taking best trades
+            cum = np.cumprod(1.0 + arr_sorted)
+            fig_growth.add_trace(go.Scatter(
+                x=np.arange(1, len(cum) + 1),
+                y=cum,
+                mode='lines+markers',
+                name=label
+            ))
+
+        fig_growth.update_layout(
+            title='Best-case cumulative growth (best trades first)',
+            xaxis_title='Number of trades (best-first)',
+            yaxis_title='Growth (starting capital = 1)'
+        )
+        figs['growth'] = fig_growth
+
+        # If a target_fig is provided, copy the growth traces into it so callers
+        # can render the growth lines on an existing price figure.
+        if target_fig is not None:
+            try:
+                for trace in fig_growth.data:
+                    target_fig.add_trace(trace)
+                figs['combined'] = target_fig
+            except Exception:
+                # if combining fails, ignore and return the separate figures
+                pass
+
+        # Distribution comparison (box + points)
+        try:
+            fig_box = px.box(df, x='swing_type', y='pct_change', points='all',
+                             labels={'swing_type': 'swing_type (-1=short, 1=long)', 'pct_change': 'pct_change (%)'},
+                             title='Distribution of pct_change by swing type')
+        except Exception:
+            # Fallback to go.Box if px fails for any reason
+            fig_box = go.Figure()
+            for sw_type, label in [(-1, 'Longs'), (1, 'Shorts')]:
+                vals = df.loc[df.swing_type == sw_type, 'pct_change']
+                if vals.empty:
+                    continue
+                fig_box.add_trace(go.Box(y=vals, name=label, boxpoints='all', jitter=0.5))
+
+        figs['box'] = fig_box
+
+        return figs
+            
     
 
 class TradingRangePeak(Indicator):

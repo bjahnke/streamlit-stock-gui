@@ -98,6 +98,7 @@ class FloorCeiling(Indicator):
         data = data.copy().reset_index().rename(columns={'index': 'bar_number'})
         tables = src.floor_ceiling_regime.fc_scale_strategy_live(data, find_retest_swing=False)
         self.tables = tables
+        print("--------Peak Columns--------", self.tables.peak_table.columns)
         return tables.enhanced_price_data
     
     def plot(self, data, fig=None, x=None):
@@ -120,6 +121,7 @@ class FloorCeiling(Indicator):
                 side='right'
             ),
         )
+
 
 
 class SMA(Indicator):

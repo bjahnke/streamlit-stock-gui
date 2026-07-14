@@ -21,5 +21,5 @@ httpd.socket = ssl.wrap_socket(
     ssl_version=ssl.PROTOCOL_TLS
 )
 
-print(f"Serving HTTPS on https://localhost:{PORT}")
+# print(f"Serving HTTPS on https://localhost:{PORT}")
 httpd.serve_forever()

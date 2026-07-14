@@ -111,7 +111,12 @@ def get_data_range(fetch_config: FetchConfig, bars: int, end_date=None):
 
 def _get_price_history(product_id, bar_count, fetch_config, end_date):
     start_date, end_date = get_data_range(fetch_config=fetch_config, bars=bar_count, end_date=end_date)
+
+    # this call is for premium api
     data = cg.get_coin_market_chart_range_by_id(id=product_id, vs_currency='usd', from_timestamp=start_date, to_timestamp=end_date)
+    
+    # this call is for demo api
+    # data = cg.get_coin_market_chart_by_id(id=product_id, vs_currency='usd', days=bar_count)
     # Convert each key to a DataFrame
     prices_df = pd.DataFrame(data["prices"], columns=["Datetime", "close"])
     market_caps_df = pd.DataFrame(data["market_caps"], columns=["Datetime", "mcap"])
@@ -132,7 +137,7 @@ def get_price_history(product_id, bars, fetch_config: FetchConfig, end_date=None
     all_data = []
     remaining_bars = bars
     current_end_date = end_date
-
+    
     bar_limit = 1000
 
     if fetch_config.interval == '1 hour':

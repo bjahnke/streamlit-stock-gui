@@ -21,6 +21,22 @@ def display_ticker_data(source: SourceOptions, symbol, interval, chart_type, ind
         st.error(f"Error fetching data: {e}")
         return
 
+    if SessionLocal is not None:
+        new_data = save_data(bar_count, symbol, interval, source)
+    else:
+        new_data = data
+        
+    unique_id = str(uuid.uuid4())
+    key=f"{symbol}_{interval}_{unique_id}"
+    new_data = pd.concat([new_data, data.iloc[[-1]]], ignore_index=True)
+    if source == SourceOptions.CMC: 
+        new_data['Datetime'] = pd.to_datetime(new_data['Datetime'], utc=True).dt.tz_localize(None)
+
+
+    display_ticker_data_new(new_data, symbol, chart_type, indicators, key, **kwargs)
+
+
+def save_data(bar_count, symbol, interval, source):
     # Add stock data to the database using MyStock.add_stock_data
     with SessionLocal() as session:
         # Create a MyStock instance (you may want to adjust attributes as needed)
@@ -38,23 +54,14 @@ def display_ticker_data(source: SourceOptions, symbol, interval, chart_type, ind
             data = pd.DataFrame(data)
 
 
-        save_data = data.rename(columns={'Datetime': 'timestamp', 'Open': 'open', 'High': 'high', 'Low': 'low', 'Close': 'close', 'Volume': 'volume'})
+        sd = data.rename(columns={'Datetime': 'timestamp', 'Open': 'open', 'High': 'high', 'Low': 'low', 'Close': 'close', 'Volume': 'volume'})
                 # Ensure the column is numeric and convert from ms to datetime
 
         if source == SourceOptions.COINGECKO:
-            save_data = save_data[:-1]  # do not save the last row, as it is not complete
+            sd = sd[:-1]  # do not save the last row, as it is not complete
 
-        stock.add_stock_data(save_data, session)
+        stock.add_stock_data(sd, session)
         new_data = stock.get_stock_data(session, limit)
         new_data = new_data.rename(columns={'timestamp': 'Datetime'})
         new_data = new_data.sort_values(by="Datetime", ascending=True)
-        
-    unique_id = str(uuid.uuid4())
-    key=f"{symbol}_{interval}_{unique_id}"
-    new_data = pd.concat([new_data, data.iloc[[-1]]], ignore_index=True)
-    if source == SourceOptions.CMC: 
-        new_data['Datetime'] = pd.to_datetime(new_data['Datetime'], utc=True).dt.tz_localize(None)
-
-
-    display_ticker_data_new(new_data, symbol, chart_type, indicators, key, **kwargs)
-
+        return new_data

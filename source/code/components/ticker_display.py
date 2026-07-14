@@ -6,6 +6,7 @@ from time import sleep
 from requests.exceptions import HTTPError
 import uuid
 from source.code.components.historical_data_plot import plot_historical_data
+from strategy.indicators import Regime
 from source.code.settings_model import FetchSettings
 from plotly.subplots import make_subplots
 
@@ -113,12 +114,34 @@ def display_ticker_data(data, symbol, chart_type, indicators, key, **kwargs):
     #         row=3, col=1
     #     )
 
-
-
     st.plotly_chart(fig, use_container_width=True, key=key)
     # Check if 'volume' column exists and plot it
     # if 'volume' in data.columns and any(data.volume > 0):
     #     plot_volume(data, key)
+
+
+    
+    # Attempt to compute and show peak best-case plots (separately) and also
+    # optionally merge growth traces into the main figure. Fail silently so
+    # that the main chart still shows if regime analysis errors.
+    try:
+        regime = Regime()
+        # update computes internal tables — `regime.update` expects a DataFrame
+        # similar to what Regime._update assumes (close/high/low/volume columns).
+        regime.update(data)
+        figs = regime.plot_peak_best_case(top_n=50, target_fig=None)
+        if figs:
+            # show growth and distribution plots as separate charts
+            if 'growth' in figs:
+                st.plotly_chart(figs['growth'], use_container_width=True, key=f"{key}_peak_growth")
+            if 'box' in figs:
+                st.plotly_chart(figs['box'], use_container_width=True, key=f"{key}_peak_box")
+            # if combined figure was returned, show that as well
+            if 'combined' in figs:
+                st.plotly_chart(figs['combined'], use_container_width=True, key=f"{key}_peak_combined")
+    except Exception:
+        # keep the UI stable if peak plotting fails
+        pass
 
     fetched_data_cols = ['Datetime', 'open', 'high', 'low', 'close', 'volume']
 

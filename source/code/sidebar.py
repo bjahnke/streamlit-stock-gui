@@ -50,7 +50,7 @@ def load_saved_args(page_name):
         st.session_state.ticker_args[page_name] = {**FetchArgs.migrate(st.session_state.ticker_args[page_name])}
 
     st.session_state.ticker_args[page_name] = {**FetchArgs.migrate(st.session_state.ticker_args[page_name])}
-    print(st.session_state.ticker_args[page_name])
+    # print(st.session_state.ticker_args[page_name])
     return FetchArgs(**st.session_state.ticker_args[page_name])
 
 
@@ -84,7 +84,8 @@ def hof_track_change(fetch_args):
     def track_change(key, input_field):
         result = input_field(fetch_args[key], f'{key}')
         if key == 'indicators':
-            print(fetch_args[key])
+            pass
+            # print(fetch_args[key])
         if result != fetch_args[key]:
             fetch_args[key] = result
             st.rerun()
@@ -111,7 +112,7 @@ def new_search_form(st_obj, saved_fetch_args, track_change):
     indicators_options = IndicatorManager.options()
     st_obj.header('Settings')
 
-    print(fetch_args)
+    # print(fetch_args)
 
     track_change(
         input_field=lambda x, y: st_obj.selectbox('Select Data Source', source_options, index=source_options.index(x), key=y), 

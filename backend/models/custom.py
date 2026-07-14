@@ -156,9 +156,9 @@ class MyStock(Stock):
         data = data[MyStockData.get_column_names()].copy()
 
         data['timestamp'] = pd.to_datetime(data['timestamp'], unit='ms', utc=True).dt.tz_localize(None)
-        print(data['timestamp'])
+
         data['timestamp'] = normalize_timestamp(data['timestamp'], str(self.interval)).astype(str)
-        print(data['timestamp'])
+
         data['stock_id'] = stock.id
         json_data = data.to_json(orient='records')
         session.execute(
@@ -199,7 +199,7 @@ class MyStock(Stock):
 
         # 1. Get historical data
         historical_data = self.get_stock_data(session, limit)
-        print(historical_data.head())
+
 
         # 2. Set timestamp as index and ensure it's datetime
         historical_data['timestamp'] = pd.to_datetime(historical_data['timestamp'])
@@ -221,12 +221,10 @@ class MyStock(Stock):
             raise ValueError(f"Unsupported new interval: {new_interval}. Must be '1 day'.")
         
         upsampled = historical_data.resample(resample_interval).agg(agg_dict).dropna(subset=['open', 'close'])
-        print(len(upsampled))
+
 
         # 4. Reset index to get timestamp back as a column
         upsampled = upsampled.reset_index()
-
-        print(upsampled.head())
 
         # 5. Create/get new stock entry for the upsampled interval
         upsampled_stock = MyStock(

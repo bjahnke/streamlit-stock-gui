@@ -135,8 +135,6 @@ def parallel_scan(symbols, interval, bar_count, num_processes=4, **kwargs):
     max_date = combined_results['end'].max()
     current_regimes = combined_results[combined_results['end'] == max_date]
     combined_ranges = combined_ranges.merge(current_regimes[['symbol', 'rg']], on='symbol', how='left').dropna()
-
-    print('done')
     
     return combined_results, combined_ranges
 
