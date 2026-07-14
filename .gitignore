@@ -132,3 +132,5 @@ api_path.json
 node_modules/
 
 *.pkl
+
+cdp_api_key.json
